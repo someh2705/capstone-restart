@@ -50,3 +50,6 @@ vcpkg/
 
 # Ignore local cache used by e.g. clangd
 .cache/
+
+.direnv
+.envrc

@@ -1,0 +1,64 @@
+# --------------------------------------------------------------------------
+#
+#  host1                               dummy1       gateway1                        gateway2
+#      \                              /            /     |                         /      |
+#        router1 -> router2 -> router3 -> router4 => router5 -> router6 => router7 => router8 -> sink5
+#      /           /          /       \                     \                                \
+#  relay1    noise1     relay2         sink1                sink2, sink3                     sink4
+#
+# --------------------------------------------------------------------------
+
+nodes:
+  explicit:
+    - host1
+    - noise1
+    - dummy1
+  patterns:
+    - { prefix: router, count: 8 }
+    - { prefix: sink, count: 5 }
+    - { prefix: relay, count: 2 }
+    - { prefix: gateway, count: 2 }
+
+multicast:
+  - name: host
+    address: "225.1.2.5"
+  - name: noise
+    address: "225.2.2.5"
+
+firewall:
+  - node: router4
+    multicast: false
+
+  - node: router6
+    multicast: false
+
+links:
+  - nodes: [router1, router2, router3, router4, router5, router6, router7, router8]
+    strategy: backbone
+  - nodes: [host1, router1]
+  - nodes: [relay1, router1]
+  - nodes: [noise1, router2]
+  - nodes: [relay2, router3]
+  - nodes: [router3, sink1]
+  - nodes: [router3, dummy1]
+  - nodes: [router4, gateway1]
+  - nodes: [gateway1, router5]
+  - nodes: [router5, sink2, sink3]
+  - nodes: [router7, gateway2]
+  - nodes: [gateway2, router8]
+  - nodes: [router8, sink4]
+  - nodes: [router8, sink5]
+
+applications:
+  explicit:
+    - { type: "OnOff", node: host1, address: host, start: 1.0, stop: 30.0 }
+    - { type: "OnOff", node: noise1, address: noise, start: 1.0, stop: 30.0 }
+    - { type: "PacketSink", node: sink1, address: host, start: 1.1, stop: 28.0, gateway: null }
+    - { type: "PacketSink", node: sink2, address: host, start: 3.0, stop: 20.0, gateway: gateway1 }
+    - { type: "PacketSink", node: sink3, address: host, start: 10.0, stop: 25.0, gateway: gateway1 }
+    - { type: "PacketSink", node: sink4, address: host, start: 5.0, stop: 15.0, gateway: gateway2 }
+    - { type: "PacketSink", node: sink5, address: host, start: 15.0, stop: 28.0, gateway: gateway2 }
+    - { type: "PacketSink", node: dummy1, address: noise, start: 1.1, stop: 28.0, gateway: null }
+    - { type: "Tunnel", relay: relay1, gateway: gateway1, address: host, start: 3.1, stop: 25.1 }
+    - { type: "Tunnel", relay: relay2, gateway: gateway2, address: host, start: 5.1, stop: 28.1 }
+
