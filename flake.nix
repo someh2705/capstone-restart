@@ -23,6 +23,8 @@
           cmake
           ninja
           pkg-config
+
+          yaml-cpp
         ];
 
         devTools = with unstable; [

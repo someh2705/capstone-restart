@@ -89,9 +89,9 @@ def convert_edges_to_routes(source, tree_edges, links):
                 route_entry["in"] = in_link
 
             if out_links:
-                route_entry["out"] = out_links
+                route_entry["outs"] = out_links
 
-            if "in" in route_entry or "out" in route_entry:
+            if "in" in route_entry or "outs" in route_entry:
                 routes.append(route_entry)
 
     return sorted(routes, key=lambda x: x["node"])
@@ -113,14 +113,14 @@ class ScenarioGenerator:
 
     def _assert(self, meta_config):
         assert meta_config["nodes"]
-        assert meta_config["multicast"]
+        assert meta_config["multicasts"]
         assert meta_config["links"]
         assert meta_config["applications"]
 
         return meta_config
 
     def _expand_nodes(self):
-        nodes = set(self.meta["nodes"].get("explicit", []))
+        nodes = set(self.meta["nodes"].get("explicits", []))
         for pattern in self.meta["nodes"].get("patterns", []):
             for i in range(1, pattern["count"] + 1):
                 nodes.add(f"{pattern['prefix']}{i}")
@@ -129,8 +129,8 @@ class ScenarioGenerator:
     def _get_firewalls(self):
         return {
             firewall["node"]
-            for firewall in self.meta.get("firewall", [])
-            if firewall.get("multicast") is False
+            for firewall in self.meta.get("firewalls", [])
+            if firewall.get("multicasts") is False
         }
 
     def _build_graph(self):
@@ -155,7 +155,7 @@ class ScenarioGenerator:
     def _get_multicast_groups(self):
         return {
             group["name"]: group["address"]
-            for group in self.meta.get("multicast", [])
+            for group in self.meta.get("multicasts", [])
         }
 
     def _link_nodes(self):
@@ -169,7 +169,7 @@ class ScenarioGenerator:
         return links
 
     def generate(self):
-        output = { "nodes": [{"name": name} for name in self.nodes]}
+        output = { "nodes": [name for name in self.nodes] }
 
         links = []
         for i, (u, v) in enumerate(self.graph.edges):
@@ -184,11 +184,11 @@ class ScenarioGenerator:
             links.append(link_spec)
         output["links"] = sorted(links, key=lambda x: x["name"])
 
-        output["multicast"] = self.meta.get("multicast", [])
+        output["multicasts"] = self.meta.get("multicasts", [])
 
         apps, scenario = self._generate_apps_and_scenario()
         output["applications"] = apps
-        output["scenario"] = scenario
+        output["scenarios"] = scenario
 
         return output
 
@@ -199,7 +199,7 @@ class ScenarioGenerator:
 
         tunnels_by_group = defaultdict(dict)
 
-        for app in self.meta["applications"].get("explicit", []):
+        for app in self.meta["applications"].get("explicits", []):
             app_type = app.get("type")
 
             if app_type == "Tunnel":
@@ -217,7 +217,7 @@ class ScenarioGenerator:
                 events[app["stop"]].append(("leave", app["node"], group_name))
 
                 if app.get("gateway"):
-                    for tunnel_app in self.meta["applications"].get("explicit", []):
+                    for tunnel_app in self.meta["applications"].get("explicits", []):
                         if tunnel_app.get("type") == "Tunnel" and tunnel_app.get("gateway") == app["gateway"]:
                             tunnels_by_group[group_name][app["node"]]= (tunnel_app["gateway"], tunnel_app.get("start"), tunnel_app.get("stop"))
                             break
@@ -236,7 +236,7 @@ class ScenarioGenerator:
         active_sinks = defaultdict(set)
 
         sources = {}
-        for app in self.meta["applications"].get("explicit", []):
+        for app in self.meta["applications"].get("explicits", []):
             if app.get("type") == "OnOff":
                 sources[app["address"]] = app["node"]
 

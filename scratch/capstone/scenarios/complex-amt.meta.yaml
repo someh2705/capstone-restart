@@ -9,7 +9,7 @@
 # --------------------------------------------------------------------------
 
 nodes:
-  explicit:
+  explicits:
     - host1
     - noise1
     - dummy1
@@ -19,13 +19,13 @@ nodes:
     - { prefix: relay, count: 2 }
     - { prefix: gateway, count: 2 }
 
-multicast:
+multicasts:
   - name: host
     address: "225.1.2.5"
   - name: noise
     address: "225.2.2.5"
 
-firewall:
+firewalls:
   - node: router4
     multicast: false
 
@@ -50,7 +50,7 @@ links:
   - nodes: [router8, sink5]
 
 applications:
-  explicit:
+  explicits:
     - { type: "OnOff", node: host1, address: host, start: 1.0, stop: 30.0 }
     - { type: "OnOff", node: noise1, address: noise, start: 1.0, stop: 30.0 }
     - { type: "PacketSink", node: sink1, address: host, start: 1.1, stop: 28.0, gateway: null }
