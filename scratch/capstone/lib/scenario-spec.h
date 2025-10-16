@@ -80,7 +80,7 @@ struct MulticastRoute
 struct Scenario
 {
     double time;
-    std::vector<MulticastRoute> multicast_routes;
+    std::vector<MulticastRoute> multicastRoutes;
 };
 
 struct ScenarioSpec
@@ -304,7 +304,7 @@ struct convert<ns3::cpt::Scenario>
         }
 
         rhs.time = node["time"].as<double>();
-        rhs.multicast_routes = node["multicast_routes"].as<std::vector<ns3::cpt::MulticastRoute>>();
+        rhs.multicastRoutes = node["multicast_routes"].as<std::vector<ns3::cpt::MulticastRoute>>();
 
         return true;
     }
