@@ -5,8 +5,9 @@ pkg_check_modules(PC_YAML_CPP REQUIRED yaml-cpp)
 # Create a custom library
 add_library(
   capstone-lib
-  lib/scenario-loader.cc
   lib/scenario-spec.h
+  lib/scenario-loader.h
+  lib/scenario-loader.cc
 )
 
 target_include_directories(
@@ -18,6 +19,8 @@ target_include_directories(
 target_link_libraries(
   capstone-lib
   PUBLIC ${PC_YAML_CPP_LIBRARIES}
+  PUBLIC ${ns3-libs}
+  PUBLIC ${ns3-contrib-libs}
 )
 
 # Link the custom library to the scratch executable
@@ -25,8 +28,8 @@ build_exec(
   EXECNAME capstone-simulator
   SOURCE_FILES capstone-simulator.cc
   LIBRARIES_TO_LINK capstone-lib
-                    ${libcore}
-                    ${PC_YAML_CPP_LIBRARIES}
+                    ${ns3-libs}
+                    ${ns3-contrib-libs}
   # use "${ns3-libs}" "${ns3-contrib-libs}" in case you want to link to all
   # enabled modules
   EXECUTABLE_DIRECTORY_PATH ${CMAKE_OUTPUT_DIRECTORY}/scratch/capstone

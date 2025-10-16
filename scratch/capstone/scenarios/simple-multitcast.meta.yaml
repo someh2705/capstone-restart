@@ -1,0 +1,29 @@
+# -----------------------------------------
+#                   sink2
+#                 /
+# host -> router1 - sink1, sink3
+#
+# ----------------------------------------
+
+nodes:
+  explicits:
+    - host1
+    - router1
+  patterns:
+    - { prefix: sink, count: 3 }
+
+multicasts:
+  - name: host
+    address: "225.1.2.4"
+
+links:
+  - nodes: [host1, router1]
+  - nodes: [router1, sink2]
+  - nodes: [router1, sink1, sink3]
+
+applications:
+  explicits:
+    - { type: "OnOff", node: host1, address: host, start: 3.0, stop: 10 }
+    - { type: "PacketSink", node: sink1, address: host, start: 2, stop: 5 }
+    - { type: "PacketSink", node: sink2, address: host, start: 4, stop: 7 }
+    - { type: "PacketSink", node: sink3, address: host, start: 6, stop: 8 }

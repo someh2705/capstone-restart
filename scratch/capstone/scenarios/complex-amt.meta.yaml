@@ -51,14 +51,25 @@ links:
 
 applications:
   explicits:
-    - { type: "OnOff", node: host1, address: host, start: 1.0, stop: 30.0 }
-    - { type: "OnOff", node: noise1, address: noise, start: 1.0, stop: 30.0 }
-    - { type: "PacketSink", node: sink1, address: host, start: 1.1, stop: 28.0, gateway: null }
-    - { type: "PacketSink", node: sink2, address: host, start: 3.0, stop: 20.0, gateway: gateway1 }
-    - { type: "PacketSink", node: sink3, address: host, start: 10.0, stop: 25.0, gateway: gateway1 }
-    - { type: "PacketSink", node: sink4, address: host, start: 5.0, stop: 15.0, gateway: gateway2 }
-    - { type: "PacketSink", node: sink5, address: host, start: 15.0, stop: 28.0, gateway: gateway2 }
-    - { type: "PacketSink", node: dummy1, address: noise, start: 1.1, stop: 28.0, gateway: null }
-    - { type: "Tunnel", relay: relay1, gateway: gateway1, address: host, start: 3.1, stop: 25.1 }
-    - { type: "Tunnel", relay: relay2, gateway: gateway2, address: host, start: 5.1, stop: 28.1 }
+    - { type: "OnOff", node: host1, address: host, start: 2.0, stop: 30.0 }
+    - { type: "OnOff", node: noise1, address: noise, start: 2.0, stop: 30.0 }
+    - { type: "PacketSink", node: sink1, address: host, start: 1.0, stop: 28.0 }
+    - { type: "PacketSink", node: sink2, address: host, start: 3.0, stop: 20.0 }
+    - { type: "PacketSink", node: sink3, address: host, start: 10.0, stop: 25.0 }
+    - { type: "PacketSink", node: sink4, address: host, start: 5.0, stop: 15.0 }
+    - { type: "PacketSink", node: sink5, address: host, start: 15.0, stop: 28.0 }
+    - { type: "PacketSink", node: dummy1, address: noise, start: 1.0, stop: 28.0 }
 
+amt:
+  relays:
+    - node: relay1
+    - node: relay2
+
+  gateways:
+    - node: gateway1
+      address: host
+      sinks: [sink2, sink3]
+
+    - node: gateway2
+      address: host
+      sinks: [sink4, sink5]

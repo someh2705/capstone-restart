@@ -4,103 +4,114 @@ from collections import defaultdict
 import itertools
 import argparse
 
-def find_multicast_tree(graph, source, sinks, firewalls, tunnels, current):
+
+def find_multicast_tree(graph, source, sinks, firewalls, amt_sink_map):
     """
     :param graph: 전체 네트워크 토폴로지
     :param source: 멀티캐스트 소스 노드 이름
     :param sinks: 현재 활성화된 sink 노드 집합
     :param firewalls: 멀티캐스트가 차단된 노드 이름 집합
-    :param tunnels: sink와 amt 맵핑 정보
-    :return (S, G) 라우팅을 위한 모든 edge 집합
+    :param amt_sink_map: sink와 gateway, 사용 가능한 relay 목록
+    :return {시작점: {엣지 집합}}
     """
 
-    tree_edges = set()
-
+    rooted_tree_edges = defaultdict(set)
     multicast_enabled_graph = graph.copy()
     multicast_enabled_graph.remove_nodes_from(firewalls)
 
-
     for sink in sinks:
-        path = []
-
-        # 일반 멀티캐스트 경로 탐색
         try:
-            path = nx.shortest_path(
-                multicast_enabled_graph, source=source, target=sink
-            )
-
+            path = nx.shortest_path(multicast_enabled_graph, source=source, target=sink)
             for i in range(len(path) - 1):
-                tree_edges.add(tuple(sorted((path[i], path[i + 1]))))
+                rooted_tree_edges[source].add(tuple(sorted((path[i], path[i + 1]))))
 
         except nx.NetworkXNoPath:
-            gateway, start, end = tunnels[sink]
-            if current < start or current > end:
+            if sink not in amt_sink_map:
                 continue
 
-            path = nx.shortest_path(
-                multicast_enabled_graph, source=gateway, target=sink
+            gateway, available_relays = amt_sink_map[sink]
+
+            best_relay = None
+            shortest_path_len = float('inf')
+
+            for relay in available_relays:
+                try:
+                    path_len = nx.shortest_path_length(graph, relay, target=gateway)
+
+                    if path_len < shortest_path_len:
+                        shortest_path_len = path_len
+                        best_relay = relay
+
+                except nx.NetworkXNoPath:
+                    continue
+
+            if not best_relay:
+                raise nx.NetworkXAlgorithmError(f"Warning: No path from source '{source}' to any available relays for sink '{sink}'.")
+
+
+            path_to_relay = nx.shortest_path(
+                multicast_enabled_graph, source=source, target=best_relay
             )
 
-            for i in range(len(path) - 1):
-                tree_edges.add(tuple(sorted((path[i], path[i + 1]))))
+            for i in range(len(path_to_relay) - 1):
+                rooted_tree_edges[source].add( tuple(sorted((path_to_relay[i], path_to_relay[i + 1]))))
 
-    return tree_edges
+            path_from_gateway = nx.shortest_path(
+                multicast_enabled_graph, source=gateway, target=sink
+            )
+            for i in range(len(path_from_gateway) - 1):
+                rooted_tree_edges[gateway].add(
+                    tuple(sorted((path_from_gateway[i], path_from_gateway[i + 1])))
+                )
 
-def convert_edges_to_routes(source, tree_edges, links):
+    return rooted_tree_edges
 
+
+def convert_edges_to_routes(root, tree_edges, links):
     if not tree_edges:
         return []
 
     adj = defaultdict(list)
-    all_nodes = set()
     for u, v in tree_edges:
         adj[u].append(v)
         adj[v].append(u)
-        all_nodes.add(u)
-        all_nodes.add(v)
 
     routes = []
-    visited = {source}
+    queue = [(root, None)]
+    visited = {root}
 
-    for start_node in all_nodes:
-        if start_node in visited:
-            continue
+    head = 0
+    while head < len(queue):
+        current, parent = queue[head]
+        head += 1
 
-        queue = [(start_node, None)]
-        visited.add(start_node)
+        route_entry = {"node": current}
 
-        while queue:
-            # BFS
-            current, previous = queue.pop(0)
+        if parent:
+            route_entry["in"] = links[(parent, current)][0]
 
-            route_entry = {"node": current}
-            in_link = links[(previous, current)][0] if previous else None
-            out_links = []
+        out_link_names = set()
+        for neighbor in adj[current]:
+            if neighbor != parent:
+                out_link_names.add(links[(current, neighbor)][0])
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append((neighbor, current))
 
-            for neighbor in adj[current]:
-                if neighbor != previous:
-                    link, _ = links[(current, neighbor)]
-                    out_links.append(link)
-                    if neighbor not in visited:
-                        visited.add(neighbor)
-                        queue.append((neighbor, current))
+        if out_link_names:
+            route_entry["outs"] = sorted(list(out_link_names))
 
-            if in_link:
-                route_entry["in"] = in_link
+        if "in" in route_entry or "outs" in route_entry:
+            routes.append(route_entry)
 
-            if out_links:
-                route_entry["outs"] = out_links
+    return routes
 
-            if "in" in route_entry or "outs" in route_entry:
-                routes.append(route_entry)
 
-    return sorted(routes, key=lambda x: x["node"])
+def make_link(nodes, subnet):
+    sorted_nodes = sorted(nodes)
 
-def make_link(node1, node2, subnet):
-    start = node1 if node1 <= node2 else node2
-    end = node2 if node1 <= node2 else node1
+    return f"link({subnet})-" + "-".join(sorted_nodes)
 
-    return f"link({subnet})-{start}-{end}"
 
 class ScenarioGenerator:
     def __init__(self, meta_config):
@@ -110,6 +121,7 @@ class ScenarioGenerator:
         self.graph = self._build_graph()
         self.links = self._link_nodes()
         self.mc_groups = self._get_multicast_groups()
+        self.amt_config = self._parse_amt_config()
 
     def _assert(self, meta_config):
         assert meta_config["nodes"]
@@ -130,7 +142,7 @@ class ScenarioGenerator:
         return {
             firewall["node"]
             for firewall in self.meta.get("firewalls", [])
-            if firewall.get("multicasts") is False
+            if firewall.get("multicast") is False
         }
 
     def _build_graph(self):
@@ -152,128 +164,183 @@ class ScenarioGenerator:
 
         return G
 
-    def _get_multicast_groups(self):
-        return {
-            group["name"]: group["address"]
-            for group in self.meta.get("multicasts", [])
-        }
-
     def _link_nodes(self):
         links = dict()
-        for i, (u, v) in enumerate(self.graph.edges):
-            subnet = f"10.0.{i}.0"
-            link = make_link(u, v, subnet)
-            links[(u, v)] = (link, subnet)
-            links[(v, u)] = (link, subnet)
+        subnet_counter = 0
+        for link_info in self.meta.get("links", []):
+            nodes_in_link = link_info["nodes"]
+
+            if link_info.get("strategy") == "backbone":
+                edges = [
+                    (nodes_in_link[j], nodes_in_link[j + 1])
+                    for j in range(len(nodes_in_link) - 1)
+                ]
+                for u, v in edges:
+                    subnet = f"10.0.{subnet_counter}.0"
+                    link_name = make_link([u, v], subnet)
+                    links[(u, v)] = (link_name, subnet)
+                    links[(v, u)] = (link_name, subnet)
+                    subnet_counter += 1
+            else:
+                subnet = f"10.0.{subnet_counter}.0"
+                link_name = make_link(nodes_in_link, subnet)
+                edges = itertools.combinations(nodes_in_link, 2)
+                for u, v in edges:
+                    links[(u, v)] = (link_name, subnet)
+                    links[(v, u)] = (link_name, subnet)
+                subnet_counter += 1
 
         return links
 
+    def _get_multicast_groups(self):
+        return {
+            group["name"]: group["address"] for group in self.meta.get("multicasts", [])
+        }
+
+    def _parse_amt_config(self):
+        config = {"relay": [], "sink_map": {}}
+        if "amt" not in self.meta:
+            return config
+
+        config["relays"] = [r["node"] for r in self.meta["amt"].get("relays", [])]
+
+        for gw_info in self.meta["amt"].get("gateways", []):
+            group_name = gw_info["address"]
+            gateway_node = gw_info["node"]
+
+            if group_name not in config["sink_map"]:
+                config["sink_map"][group_name] = {}
+
+            for sink_node in gw_info["sinks"]:
+                config["sink_map"][group_name][sink_node] = (
+                    gateway_node,
+                    config["relays"],
+                )
+
+        return config
+
     def generate(self):
-        output = { "nodes": [name for name in self.nodes] }
+        output = {"nodes": [name for name in self.nodes]}
 
         links = []
-        for i, (u, v) in enumerate(self.graph.edges):
-            link, subnet = self.links[(u, v)]
+        processed_link_names = set()
+        for u, v in self.graph.edges:
+            link_name, subnet = self.links[(u, v)]
+            if link_name in processed_link_names:
+                continue
+            nodes_on_this_link = []
+            is_lan = False
+            for link_info in self.meta.get("links", []):
+                if not link_info.get("strategy") == "backbone":
+                    temp_name = make_link(link_info["nodes"], subnet)
+                    if temp_name == link_name:
+                        nodes_on_this_link = link_info["nodes"]
+                        is_lan = True
+                        break
+
+            if not is_lan:
+                nodes_on_this_link = sorted([u, v])
+
             link_spec = {
-                "name": link,
+                "name": link_name,
                 "subnet": subnet,
                 "mask": "255.255.255.0",
-                "nodes": [u, v]
+                "nodes": nodes_on_this_link,
             }
-
             links.append(link_spec)
+            processed_link_names.add(link_name)
+
         output["links"] = sorted(links, key=lambda x: x["name"])
-
         output["multicasts"] = self.meta.get("multicasts", [])
-
         apps, scenario = self._generate_apps_and_scenario()
         output["applications"] = apps
         output["scenarios"] = scenario
-
         return output
 
     def _generate_apps_and_scenario(self):
         base_apps = []
         events = defaultdict(list)
-        tunnel_port = 9000
-
-        tunnels_by_group = defaultdict(dict)
 
         for app in self.meta["applications"].get("explicits", []):
-            app_type = app.get("type")
-
-            if app_type == "Tunnel":
-                group_name = app["address"]
-                app["port"] = tunnel_port
-                events[app["start"]].append(("join", app["relay"], group_name))
-                events[app["stop"]].append(("leave", app["relay"], group_name))
-
-                tunnel_port += 1
-                base_apps.append(app)
-
-            elif app_type == "PacketSink":
+            base_apps.append(app)
+            if app.get("type") == "PacketSink":
                 group_name = app["address"]
                 events[app["start"]].append(("join", app["node"], group_name))
                 events[app["stop"]].append(("leave", app["node"], group_name))
 
-                if app.get("gateway"):
-                    for tunnel_app in self.meta["applications"].get("explicits", []):
-                        if tunnel_app.get("type") == "Tunnel" and tunnel_app.get("gateway") == app["gateway"]:
-                            tunnels_by_group[group_name][app["node"]]= (tunnel_app["gateway"], tunnel_app.get("start"), tunnel_app.get("stop"))
-                            break
+        if "amt" in self.meta:
+            for relay_node in self.amt_config["relays"]:
+                base_apps.append({"type": "AmtRelay", "node": relay_node})
 
-                base_apps.append(app)
-
-            elif app_type == "OnOff":
-                group_name = app["address"]
-                # events[app["start"]].append(("join", app["node"], group_name))
-                # events[app["stop"]].append(("leave", app["node"], group_name))
-
-                base_apps.append(app)
+            for gw_info in self.meta["amt"].get("gateways", []):
+                base_apps.append(
+                    {
+                        "type": "AmtGateway",
+                        "node": gw_info["node"],
+                        "address": gw_info["address"],
+                    }
+                )
 
         scenario_steps = []
         sorted_times = sorted(events.keys())
         active_sinks = defaultdict(set)
-
-        sources = {}
-        for app in self.meta["applications"].get("explicits", []):
-            if app.get("type") == "OnOff":
-                sources[app["address"]] = app["node"]
+        sources = {
+            app["address"]: app["node"]
+            for app in self.meta["applications"].get("explicits", [])
+            if app.get("type") == "OnOff"
+        }
 
         for time in sorted_times:
             for event_type, node, group in events[time]:
                 if event_type == "join":
                     active_sinks[group].add(node)
-                elif event_type == "leave":
+                else:
                     active_sinks[group].discard(node)
 
             all_routes_for_this_time = []
-
             for group, sinks in active_sinks.items():
                 if not sinks:
                     continue
-
                 source_node = sources.get(group)
                 if not source_node:
                     continue
 
-                tree_edges = find_multicast_tree(
+                rooted_tree_edges = find_multicast_tree(
                     self.graph,
                     source_node,
                     sinks,
                     self.firewalls,
-                    tunnels_by_group.get(group, {}),
-                    time
+                    self.amt_config.get("sink_map", {}).get(group, {}),
                 )
 
-                routes = convert_edges_to_routes(source_node, tree_edges, self.links)
-                all_routes_for_this_time.append(
-                    {
-                        "group": self.mc_groups[group],
-                        "source": source_node,
-                        "routes": routes
-                    }
-                )
+                combined_routes = {}
+                for root, edges in rooted_tree_edges.items():
+                    routes = convert_edges_to_routes(root, edges, self.links)
+                    for r in routes:
+                        node_name = r["node"]
+                        if node_name not in combined_routes:
+                            combined_routes[node_name] = r
+                        else:
+                            new_outs = r.get("outs", [])
+                            if new_outs:
+                                existing_route = combined_routes[node_name]
+                                existing_outs = existing_route.get("outs", [])
+                                for out_link in new_outs:
+                                    if out_link not in existing_outs:
+                                        existing_outs.append(out_link)
+                                existing_route["outs"] = sorted(existing_outs)
+
+                if combined_routes:
+                    final_routes = sorted(
+                        combined_routes.values(), key=lambda x: x["node"]
+                    )
+                    all_routes_for_this_time.append(
+                        {
+                            "group": self.mc_groups[group],
+                            "source": source_node,
+                            "routes": final_routes,
+                        }
+                    )
 
             scenario_steps.append(
                 {"time": time, "multicast_routes": all_routes_for_this_time}
@@ -297,10 +364,13 @@ def main(meta_file, out_file):
 
     print(f"성공적으로 '{out_file}' 파일을 생성했습니다.")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("meta", help="meta YAML input file")
-    parser.add_argument("-o", "--out", help="output scenario YAML file name", default = None)
+    parser.add_argument(
+        "-o", "--out", help="output scenario YAML file name", default=None
+    )
     args = parser.parse_args()
 
     main(args.meta, args.out)

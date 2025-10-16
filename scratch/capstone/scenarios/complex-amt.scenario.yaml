@@ -20,137 +20,126 @@ nodes:
 - sink4
 - sink5
 links:
-- name: link(10.0.0.0)-dummy1-router3
+- name: link(10.0.0.0)-router1-router2
   subnet: 10.0.0.0
   mask: 255.255.255.0
   nodes:
-  - dummy1
-  - router3
-- name: link(10.0.1.0)-gateway1-router4
+  - router1
+  - router2
+- name: link(10.0.1.0)-router2-router3
   subnet: 10.0.1.0
-  mask: 255.255.255.0
-  nodes:
-  - gateway1
-  - router4
-- name: link(10.0.10.0)-router2-router3
-  subnet: 10.0.10.0
   mask: 255.255.255.0
   nodes:
   - router2
   - router3
-- name: link(10.0.11.0)-router3-router4
+- name: link(10.0.10.0)-relay2-router3
+  subnet: 10.0.10.0
+  mask: 255.255.255.0
+  nodes:
+  - relay2
+  - router3
+- name: link(10.0.11.0)-router3-sink1
   subnet: 10.0.11.0
   mask: 255.255.255.0
   nodes:
   - router3
-  - router4
-- name: link(10.0.12.0)-router3-sink1
+  - sink1
+- name: link(10.0.12.0)-dummy1-router3
   subnet: 10.0.12.0
   mask: 255.255.255.0
   nodes:
   - router3
-  - sink1
-- name: link(10.0.13.0)-router4-router5
+  - dummy1
+- name: link(10.0.13.0)-gateway1-router4
   subnet: 10.0.13.0
   mask: 255.255.255.0
   nodes:
   - router4
-  - router5
-- name: link(10.0.14.0)-router5-router6
+  - gateway1
+- name: link(10.0.14.0)-gateway1-router5
   subnet: 10.0.14.0
   mask: 255.255.255.0
   nodes:
+  - gateway1
   - router5
-  - router6
-- name: link(10.0.15.0)-router5-sink2
+- name: link(10.0.15.0)-router5-sink2-sink3
   subnet: 10.0.15.0
   mask: 255.255.255.0
   nodes:
   - router5
   - sink2
-- name: link(10.0.16.0)-router5-sink3
+  - sink3
+- name: link(10.0.16.0)-gateway2-router7
   subnet: 10.0.16.0
   mask: 255.255.255.0
   nodes:
-  - router5
-  - sink3
-- name: link(10.0.17.0)-router6-router7
+  - router7
+  - gateway2
+- name: link(10.0.17.0)-gateway2-router8
   subnet: 10.0.17.0
   mask: 255.255.255.0
   nodes:
-  - router6
-  - router7
-- name: link(10.0.18.0)-router7-router8
-  subnet: 10.0.18.0
-  mask: 255.255.255.0
-  nodes:
-  - router7
+  - gateway2
   - router8
-- name: link(10.0.19.0)-router8-sink4
-  subnet: 10.0.19.0
+- name: link(10.0.18.0)-router8-sink4
+  subnet: 10.0.18.0
   mask: 255.255.255.0
   nodes:
   - router8
   - sink4
-- name: link(10.0.2.0)-gateway1-router5
-  subnet: 10.0.2.0
-  mask: 255.255.255.0
-  nodes:
-  - gateway1
-  - router5
-- name: link(10.0.20.0)-router8-sink5
-  subnet: 10.0.20.0
+- name: link(10.0.19.0)-router8-sink5
+  subnet: 10.0.19.0
   mask: 255.255.255.0
   nodes:
   - router8
   - sink5
-- name: link(10.0.21.0)-sink2-sink3
-  subnet: 10.0.21.0
+- name: link(10.0.2.0)-router3-router4
+  subnet: 10.0.2.0
   mask: 255.255.255.0
   nodes:
-  - sink2
-  - sink3
-- name: link(10.0.3.0)-gateway2-router7
+  - router3
+  - router4
+- name: link(10.0.3.0)-router4-router5
   subnet: 10.0.3.0
   mask: 255.255.255.0
   nodes:
-  - gateway2
-  - router7
-- name: link(10.0.4.0)-gateway2-router8
+  - router4
+  - router5
+- name: link(10.0.4.0)-router5-router6
   subnet: 10.0.4.0
   mask: 255.255.255.0
   nodes:
-  - gateway2
-  - router8
-- name: link(10.0.5.0)-host1-router1
+  - router5
+  - router6
+- name: link(10.0.5.0)-router6-router7
   subnet: 10.0.5.0
+  mask: 255.255.255.0
+  nodes:
+  - router6
+  - router7
+- name: link(10.0.6.0)-router7-router8
+  subnet: 10.0.6.0
+  mask: 255.255.255.0
+  nodes:
+  - router7
+  - router8
+- name: link(10.0.7.0)-host1-router1
+  subnet: 10.0.7.0
   mask: 255.255.255.0
   nodes:
   - host1
   - router1
-- name: link(10.0.6.0)-noise1-router2
-  subnet: 10.0.6.0
-  mask: 255.255.255.0
-  nodes:
-  - noise1
-  - router2
-- name: link(10.0.7.0)-relay1-router1
-  subnet: 10.0.7.0
+- name: link(10.0.8.0)-relay1-router1
+  subnet: 10.0.8.0
   mask: 255.255.255.0
   nodes:
   - relay1
   - router1
-- name: link(10.0.8.0)-relay2-router3
-  subnet: 10.0.8.0
-  mask: 255.255.255.0
-  nodes:
-  - relay2
-  - router3
-- name: link(10.0.9.0)-router1-router2
+- name: link(10.0.9.0)-noise1-router2
   subnet: 10.0.9.0
   mask: 255.255.255.0
   nodes:
-  - router1
+  - noise1
   - router2
 multicasts:
 - name: host
@@ -161,656 +150,431 @@ applications:
 - type: OnOff
   node: host1
   address: host
-  start: 1.0
+  start: 2.0
   stop: 30.0
 - type: OnOff
   node: noise1
   address: noise
-  start: 1.0
+  start: 2.0
   stop: 30.0
 - type: PacketSink
   node: sink1
   address: host
-  start: 1.1
+  start: 1.0
   stop: 28.0
-  gateway: null
 - type: PacketSink
   node: sink2
   address: host
   start: 3.0
   stop: 20.0
-  gateway: gateway1
 - type: PacketSink
   node: sink3
   address: host
   start: 10.0
   stop: 25.0
-  gateway: gateway1
 - type: PacketSink
   node: sink4
   address: host
   start: 5.0
   stop: 15.0
-  gateway: gateway2
 - type: PacketSink
   node: sink5
   address: host
   start: 15.0
   stop: 28.0
-  gateway: gateway2
 - type: PacketSink
   node: dummy1
   address: noise
-  start: 1.1
+  start: 1.0
   stop: 28.0
-  gateway: null
-- type: Tunnel
-  relay: relay1
-  gateway: gateway1
+- type: AmtRelay
+  node: relay1
+- type: AmtRelay
+  node: relay2
+- type: AmtGateway
+  node: gateway1
   address: host
-  start: 3.1
-  stop: 25.1
-  port: 9000
-- type: Tunnel
-  relay: relay2
-  gateway: gateway2
+- type: AmtGateway
+  node: gateway2
   address: host
-  start: 5.1
-  stop: 28.1
-  port: 9001
 scenarios:
-- time: 1.1
+- time: 1.0
   multicast_routes:
   - group: 225.1.2.5
     source: host1
     routes:
+    - node: host1
+      outs:
+      - link(10.0.7.0)-host1-router1
     - node: router1
-      in: link(10.0.9.0)-router1-router2
+      in: link(10.0.7.0)-host1-router1
       outs:
-      - link(10.0.5.0)-host1-router1
+      - link(10.0.0.0)-router1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.0.0)-router1-router2
       outs:
-      - link(10.0.9.0)-router1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.12.0)-router3-sink1
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
+      - link(10.0.11.0)-router3-sink1
     - node: sink1
-      outs:
-      - link(10.0.12.0)-router3-sink1
+      in: link(10.0.11.0)-router3-sink1
   - group: 225.2.2.5
     source: noise1
     routes:
     - node: dummy1
+      in: link(10.0.12.0)-dummy1-router3
+    - node: noise1
       outs:
-      - link(10.0.0.0)-dummy1-router3
+      - link(10.0.9.0)-noise1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.9.0)-noise1-router2
       outs:
-      - link(10.0.6.0)-noise1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.0.0)-dummy1-router3
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
+      - link(10.0.12.0)-dummy1-router3
 - time: 3.0
   multicast_routes:
   - group: 225.1.2.5
     source: host1
     routes:
+    - node: gateway1
+      outs:
+      - link(10.0.14.0)-gateway1-router5
+    - node: host1
+      outs:
+      - link(10.0.7.0)-host1-router1
+    - node: relay2
+      in: link(10.0.10.0)-relay2-router3
     - node: router1
-      in: link(10.0.9.0)-router1-router2
+      in: link(10.0.7.0)-host1-router1
       outs:
-      - link(10.0.5.0)-host1-router1
+      - link(10.0.0.0)-router1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.0.0)-router1-router2
       outs:
-      - link(10.0.9.0)-router1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.11.0)-router3-router4
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.12.0)-router3-sink1
-    - node: router4
-      in: link(10.0.13.0)-router4-router5
-      outs:
-      - link(10.0.11.0)-router3-router4
+      - link(10.0.10.0)-relay2-router3
+      - link(10.0.11.0)-router3-sink1
     - node: router5
+      in: link(10.0.14.0)-gateway1-router5
       outs:
-      - link(10.0.15.0)-router5-sink2
-      - link(10.0.13.0)-router4-router5
+      - link(10.0.15.0)-router5-sink2-sink3
     - node: sink1
-      in: link(10.0.12.0)-router3-sink1
+      in: link(10.0.11.0)-router3-sink1
     - node: sink2
-      in: link(10.0.15.0)-router5-sink2
+      in: link(10.0.15.0)-router5-sink2-sink3
   - group: 225.2.2.5
     source: noise1
     routes:
     - node: dummy1
+      in: link(10.0.12.0)-dummy1-router3
+    - node: noise1
       outs:
-      - link(10.0.0.0)-dummy1-router3
+      - link(10.0.9.0)-noise1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.9.0)-noise1-router2
       outs:
-      - link(10.0.6.0)-noise1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.0.0)-dummy1-router3
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
-- time: 3.1
-  multicast_routes:
-  - group: 225.1.2.5
-    source: host1
-    routes:
-    - node: relay1
-      in: link(10.0.7.0)-relay1-router1
-    - node: router1
-      in: link(10.0.9.0)-router1-router2
-      outs:
-      - link(10.0.5.0)-host1-router1
-      - link(10.0.7.0)-relay1-router1
-    - node: router2
-      in: link(10.0.10.0)-router2-router3
-      outs:
-      - link(10.0.9.0)-router1-router2
-    - node: router3
-      in: link(10.0.11.0)-router3-router4
-      outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.12.0)-router3-sink1
-    - node: router4
-      in: link(10.0.13.0)-router4-router5
-      outs:
-      - link(10.0.11.0)-router3-router4
-    - node: router5
-      outs:
-      - link(10.0.15.0)-router5-sink2
-      - link(10.0.13.0)-router4-router5
-    - node: sink1
-      in: link(10.0.12.0)-router3-sink1
-    - node: sink2
-      in: link(10.0.15.0)-router5-sink2
-  - group: 225.2.2.5
-    source: noise1
-    routes:
-    - node: dummy1
-      outs:
-      - link(10.0.0.0)-dummy1-router3
-    - node: router2
-      in: link(10.0.10.0)-router2-router3
-      outs:
-      - link(10.0.6.0)-noise1-router2
-    - node: router3
-      in: link(10.0.0.0)-dummy1-router3
-      outs:
-      - link(10.0.10.0)-router2-router3
+      - link(10.0.12.0)-dummy1-router3
 - time: 5.0
   multicast_routes:
   - group: 225.1.2.5
     source: host1
     routes:
-    - node: relay1
-      in: link(10.0.7.0)-relay1-router1
-    - node: router1
-      in: link(10.0.9.0)-router1-router2
+    - node: gateway1
       outs:
-      - link(10.0.5.0)-host1-router1
-      - link(10.0.7.0)-relay1-router1
-    - node: router2
-      in: link(10.0.10.0)-router2-router3
+      - link(10.0.14.0)-gateway1-router5
+    - node: gateway2
       outs:
-      - link(10.0.9.0)-router1-router2
-    - node: router3
-      in: link(10.0.11.0)-router3-router4
+      - link(10.0.17.0)-gateway2-router8
+    - node: host1
       outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.12.0)-router3-sink1
-    - node: router4
-      in: link(10.0.13.0)-router4-router5
-      outs:
-      - link(10.0.11.0)-router3-router4
-    - node: router5
-      outs:
-      - link(10.0.15.0)-router5-sink2
-      - link(10.0.14.0)-router5-router6
-      - link(10.0.13.0)-router4-router5
-    - node: router6
-      in: link(10.0.14.0)-router5-router6
-      outs:
-      - link(10.0.17.0)-router6-router7
-    - node: router7
-      in: link(10.0.17.0)-router6-router7
-      outs:
-      - link(10.0.18.0)-router7-router8
-    - node: router8
-      in: link(10.0.18.0)-router7-router8
-      outs:
-      - link(10.0.19.0)-router8-sink4
-    - node: sink1
-      in: link(10.0.12.0)-router3-sink1
-    - node: sink2
-      in: link(10.0.15.0)-router5-sink2
-    - node: sink4
-      in: link(10.0.19.0)-router8-sink4
-  - group: 225.2.2.5
-    source: noise1
-    routes:
-    - node: dummy1
-      outs:
-      - link(10.0.0.0)-dummy1-router3
-    - node: router2
-      in: link(10.0.10.0)-router2-router3
-      outs:
-      - link(10.0.6.0)-noise1-router2
-    - node: router3
-      in: link(10.0.0.0)-dummy1-router3
-      outs:
-      - link(10.0.10.0)-router2-router3
-- time: 5.1
-  multicast_routes:
-  - group: 225.1.2.5
-    source: host1
-    routes:
-    - node: relay1
-      in: link(10.0.7.0)-relay1-router1
+      - link(10.0.7.0)-host1-router1
     - node: relay2
-      in: link(10.0.8.0)-relay2-router3
+      in: link(10.0.10.0)-relay2-router3
     - node: router1
-      in: link(10.0.9.0)-router1-router2
+      in: link(10.0.7.0)-host1-router1
       outs:
-      - link(10.0.5.0)-host1-router1
-      - link(10.0.7.0)-relay1-router1
+      - link(10.0.0.0)-router1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.0.0)-router1-router2
       outs:
-      - link(10.0.9.0)-router1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.11.0)-router3-router4
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.12.0)-router3-sink1
-      - link(10.0.8.0)-relay2-router3
-    - node: router4
-      in: link(10.0.13.0)-router4-router5
-      outs:
-      - link(10.0.11.0)-router3-router4
+      - link(10.0.10.0)-relay2-router3
+      - link(10.0.11.0)-router3-sink1
     - node: router5
+      in: link(10.0.14.0)-gateway1-router5
       outs:
-      - link(10.0.15.0)-router5-sink2
-      - link(10.0.14.0)-router5-router6
-      - link(10.0.13.0)-router4-router5
-    - node: router6
-      in: link(10.0.14.0)-router5-router6
-      outs:
-      - link(10.0.17.0)-router6-router7
-    - node: router7
-      in: link(10.0.17.0)-router6-router7
-      outs:
-      - link(10.0.18.0)-router7-router8
+      - link(10.0.15.0)-router5-sink2-sink3
     - node: router8
-      in: link(10.0.18.0)-router7-router8
+      in: link(10.0.17.0)-gateway2-router8
       outs:
-      - link(10.0.19.0)-router8-sink4
+      - link(10.0.18.0)-router8-sink4
     - node: sink1
-      in: link(10.0.12.0)-router3-sink1
+      in: link(10.0.11.0)-router3-sink1
     - node: sink2
-      in: link(10.0.15.0)-router5-sink2
+      in: link(10.0.15.0)-router5-sink2-sink3
     - node: sink4
-      in: link(10.0.19.0)-router8-sink4
+      in: link(10.0.18.0)-router8-sink4
   - group: 225.2.2.5
     source: noise1
     routes:
     - node: dummy1
+      in: link(10.0.12.0)-dummy1-router3
+    - node: noise1
       outs:
-      - link(10.0.0.0)-dummy1-router3
+      - link(10.0.9.0)-noise1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.9.0)-noise1-router2
       outs:
-      - link(10.0.6.0)-noise1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.0.0)-dummy1-router3
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
+      - link(10.0.12.0)-dummy1-router3
 - time: 10.0
   multicast_routes:
   - group: 225.1.2.5
     source: host1
     routes:
-    - node: relay1
-      in: link(10.0.7.0)-relay1-router1
+    - node: gateway1
+      outs:
+      - link(10.0.14.0)-gateway1-router5
+    - node: gateway2
+      outs:
+      - link(10.0.17.0)-gateway2-router8
+    - node: host1
+      outs:
+      - link(10.0.7.0)-host1-router1
     - node: relay2
-      in: link(10.0.8.0)-relay2-router3
+      in: link(10.0.10.0)-relay2-router3
     - node: router1
-      in: link(10.0.9.0)-router1-router2
+      in: link(10.0.7.0)-host1-router1
       outs:
-      - link(10.0.5.0)-host1-router1
-      - link(10.0.7.0)-relay1-router1
+      - link(10.0.0.0)-router1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.0.0)-router1-router2
       outs:
-      - link(10.0.9.0)-router1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.11.0)-router3-router4
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.12.0)-router3-sink1
-      - link(10.0.8.0)-relay2-router3
-    - node: router4
-      in: link(10.0.13.0)-router4-router5
-      outs:
-      - link(10.0.11.0)-router3-router4
+      - link(10.0.10.0)-relay2-router3
+      - link(10.0.11.0)-router3-sink1
     - node: router5
+      in: link(10.0.14.0)-gateway1-router5
       outs:
-      - link(10.0.15.0)-router5-sink2
-      - link(10.0.16.0)-router5-sink3
-      - link(10.0.14.0)-router5-router6
-      - link(10.0.13.0)-router4-router5
-    - node: router6
-      in: link(10.0.14.0)-router5-router6
-      outs:
-      - link(10.0.17.0)-router6-router7
-    - node: router7
-      in: link(10.0.17.0)-router6-router7
-      outs:
-      - link(10.0.18.0)-router7-router8
+      - link(10.0.15.0)-router5-sink2-sink3
     - node: router8
-      in: link(10.0.18.0)-router7-router8
+      in: link(10.0.17.0)-gateway2-router8
       outs:
-      - link(10.0.19.0)-router8-sink4
+      - link(10.0.18.0)-router8-sink4
     - node: sink1
-      in: link(10.0.12.0)-router3-sink1
+      in: link(10.0.11.0)-router3-sink1
     - node: sink2
-      in: link(10.0.15.0)-router5-sink2
+      in: link(10.0.15.0)-router5-sink2-sink3
     - node: sink3
-      in: link(10.0.16.0)-router5-sink3
+      in: link(10.0.15.0)-router5-sink2-sink3
     - node: sink4
-      in: link(10.0.19.0)-router8-sink4
+      in: link(10.0.18.0)-router8-sink4
   - group: 225.2.2.5
     source: noise1
     routes:
     - node: dummy1
+      in: link(10.0.12.0)-dummy1-router3
+    - node: noise1
       outs:
-      - link(10.0.0.0)-dummy1-router3
+      - link(10.0.9.0)-noise1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.9.0)-noise1-router2
       outs:
-      - link(10.0.6.0)-noise1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.0.0)-dummy1-router3
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
+      - link(10.0.12.0)-dummy1-router3
 - time: 15.0
   multicast_routes:
   - group: 225.1.2.5
     source: host1
     routes:
-    - node: relay1
-      in: link(10.0.7.0)-relay1-router1
+    - node: gateway1
+      outs:
+      - link(10.0.14.0)-gateway1-router5
+    - node: gateway2
+      outs:
+      - link(10.0.17.0)-gateway2-router8
+    - node: host1
+      outs:
+      - link(10.0.7.0)-host1-router1
     - node: relay2
-      in: link(10.0.8.0)-relay2-router3
+      in: link(10.0.10.0)-relay2-router3
     - node: router1
-      in: link(10.0.9.0)-router1-router2
+      in: link(10.0.7.0)-host1-router1
       outs:
-      - link(10.0.5.0)-host1-router1
-      - link(10.0.7.0)-relay1-router1
+      - link(10.0.0.0)-router1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.0.0)-router1-router2
       outs:
-      - link(10.0.9.0)-router1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.11.0)-router3-router4
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.12.0)-router3-sink1
-      - link(10.0.8.0)-relay2-router3
-    - node: router4
-      in: link(10.0.13.0)-router4-router5
-      outs:
-      - link(10.0.11.0)-router3-router4
+      - link(10.0.10.0)-relay2-router3
+      - link(10.0.11.0)-router3-sink1
     - node: router5
+      in: link(10.0.14.0)-gateway1-router5
       outs:
-      - link(10.0.15.0)-router5-sink2
-      - link(10.0.16.0)-router5-sink3
-      - link(10.0.14.0)-router5-router6
-      - link(10.0.13.0)-router4-router5
-    - node: router6
-      in: link(10.0.14.0)-router5-router6
-      outs:
-      - link(10.0.17.0)-router6-router7
-    - node: router7
-      in: link(10.0.17.0)-router6-router7
-      outs:
-      - link(10.0.18.0)-router7-router8
+      - link(10.0.15.0)-router5-sink2-sink3
     - node: router8
-      in: link(10.0.18.0)-router7-router8
+      in: link(10.0.17.0)-gateway2-router8
       outs:
-      - link(10.0.20.0)-router8-sink5
+      - link(10.0.19.0)-router8-sink5
     - node: sink1
-      in: link(10.0.12.0)-router3-sink1
+      in: link(10.0.11.0)-router3-sink1
     - node: sink2
-      in: link(10.0.15.0)-router5-sink2
+      in: link(10.0.15.0)-router5-sink2-sink3
     - node: sink3
-      in: link(10.0.16.0)-router5-sink3
+      in: link(10.0.15.0)-router5-sink2-sink3
     - node: sink5
-      in: link(10.0.20.0)-router8-sink5
+      in: link(10.0.19.0)-router8-sink5
   - group: 225.2.2.5
     source: noise1
     routes:
     - node: dummy1
+      in: link(10.0.12.0)-dummy1-router3
+    - node: noise1
       outs:
-      - link(10.0.0.0)-dummy1-router3
+      - link(10.0.9.0)-noise1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.9.0)-noise1-router2
       outs:
-      - link(10.0.6.0)-noise1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.0.0)-dummy1-router3
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
+      - link(10.0.12.0)-dummy1-router3
 - time: 20.0
   multicast_routes:
   - group: 225.1.2.5
     source: host1
     routes:
-    - node: relay1
-      in: link(10.0.7.0)-relay1-router1
+    - node: gateway1
+      outs:
+      - link(10.0.14.0)-gateway1-router5
+    - node: gateway2
+      outs:
+      - link(10.0.17.0)-gateway2-router8
+    - node: host1
+      outs:
+      - link(10.0.7.0)-host1-router1
     - node: relay2
-      in: link(10.0.8.0)-relay2-router3
+      in: link(10.0.10.0)-relay2-router3
     - node: router1
-      in: link(10.0.9.0)-router1-router2
+      in: link(10.0.7.0)-host1-router1
       outs:
-      - link(10.0.5.0)-host1-router1
-      - link(10.0.7.0)-relay1-router1
+      - link(10.0.0.0)-router1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.0.0)-router1-router2
       outs:
-      - link(10.0.9.0)-router1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.11.0)-router3-router4
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.12.0)-router3-sink1
-      - link(10.0.8.0)-relay2-router3
-    - node: router4
-      in: link(10.0.13.0)-router4-router5
-      outs:
-      - link(10.0.11.0)-router3-router4
+      - link(10.0.10.0)-relay2-router3
+      - link(10.0.11.0)-router3-sink1
     - node: router5
+      in: link(10.0.14.0)-gateway1-router5
       outs:
-      - link(10.0.16.0)-router5-sink3
-      - link(10.0.14.0)-router5-router6
-      - link(10.0.13.0)-router4-router5
-    - node: router6
-      in: link(10.0.14.0)-router5-router6
-      outs:
-      - link(10.0.17.0)-router6-router7
-    - node: router7
-      in: link(10.0.17.0)-router6-router7
-      outs:
-      - link(10.0.18.0)-router7-router8
+      - link(10.0.15.0)-router5-sink2-sink3
     - node: router8
-      in: link(10.0.18.0)-router7-router8
+      in: link(10.0.17.0)-gateway2-router8
       outs:
-      - link(10.0.20.0)-router8-sink5
+      - link(10.0.19.0)-router8-sink5
     - node: sink1
-      in: link(10.0.12.0)-router3-sink1
+      in: link(10.0.11.0)-router3-sink1
     - node: sink3
-      in: link(10.0.16.0)-router5-sink3
+      in: link(10.0.15.0)-router5-sink2-sink3
     - node: sink5
-      in: link(10.0.20.0)-router8-sink5
+      in: link(10.0.19.0)-router8-sink5
   - group: 225.2.2.5
     source: noise1
     routes:
     - node: dummy1
+      in: link(10.0.12.0)-dummy1-router3
+    - node: noise1
       outs:
-      - link(10.0.0.0)-dummy1-router3
+      - link(10.0.9.0)-noise1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.9.0)-noise1-router2
       outs:
-      - link(10.0.6.0)-noise1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.0.0)-dummy1-router3
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
+      - link(10.0.12.0)-dummy1-router3
 - time: 25.0
   multicast_routes:
   - group: 225.1.2.5
     source: host1
     routes:
-    - node: relay1
-      in: link(10.0.7.0)-relay1-router1
+    - node: gateway2
+      outs:
+      - link(10.0.17.0)-gateway2-router8
+    - node: host1
+      outs:
+      - link(10.0.7.0)-host1-router1
     - node: relay2
-      in: link(10.0.8.0)-relay2-router3
+      in: link(10.0.10.0)-relay2-router3
     - node: router1
-      in: link(10.0.9.0)-router1-router2
+      in: link(10.0.7.0)-host1-router1
       outs:
-      - link(10.0.5.0)-host1-router1
-      - link(10.0.7.0)-relay1-router1
+      - link(10.0.0.0)-router1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.0.0)-router1-router2
       outs:
-      - link(10.0.9.0)-router1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.11.0)-router3-router4
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.12.0)-router3-sink1
-      - link(10.0.8.0)-relay2-router3
-    - node: router4
-      in: link(10.0.13.0)-router4-router5
-      outs:
-      - link(10.0.11.0)-router3-router4
-    - node: router5
-      outs:
-      - link(10.0.14.0)-router5-router6
-      - link(10.0.13.0)-router4-router5
-    - node: router6
-      in: link(10.0.14.0)-router5-router6
-      outs:
-      - link(10.0.17.0)-router6-router7
-    - node: router7
-      in: link(10.0.17.0)-router6-router7
-      outs:
-      - link(10.0.18.0)-router7-router8
+      - link(10.0.10.0)-relay2-router3
+      - link(10.0.11.0)-router3-sink1
     - node: router8
-      in: link(10.0.18.0)-router7-router8
+      in: link(10.0.17.0)-gateway2-router8
       outs:
-      - link(10.0.20.0)-router8-sink5
+      - link(10.0.19.0)-router8-sink5
     - node: sink1
-      in: link(10.0.12.0)-router3-sink1
+      in: link(10.0.11.0)-router3-sink1
     - node: sink5
-      in: link(10.0.20.0)-router8-sink5
+      in: link(10.0.19.0)-router8-sink5
   - group: 225.2.2.5
     source: noise1
     routes:
     - node: dummy1
+      in: link(10.0.12.0)-dummy1-router3
+    - node: noise1
       outs:
-      - link(10.0.0.0)-dummy1-router3
+      - link(10.0.9.0)-noise1-router2
     - node: router2
-      in: link(10.0.10.0)-router2-router3
+      in: link(10.0.9.0)-noise1-router2
       outs:
-      - link(10.0.6.0)-noise1-router2
+      - link(10.0.1.0)-router2-router3
     - node: router3
-      in: link(10.0.0.0)-dummy1-router3
+      in: link(10.0.1.0)-router2-router3
       outs:
-      - link(10.0.10.0)-router2-router3
-- time: 25.1
-  multicast_routes:
-  - group: 225.1.2.5
-    source: host1
-    routes:
-    - node: relay2
-      in: link(10.0.8.0)-relay2-router3
-    - node: router1
-      in: link(10.0.9.0)-router1-router2
-      outs:
-      - link(10.0.5.0)-host1-router1
-    - node: router2
-      in: link(10.0.10.0)-router2-router3
-      outs:
-      - link(10.0.9.0)-router1-router2
-    - node: router3
-      in: link(10.0.11.0)-router3-router4
-      outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.12.0)-router3-sink1
-      - link(10.0.8.0)-relay2-router3
-    - node: router4
-      in: link(10.0.13.0)-router4-router5
-      outs:
-      - link(10.0.11.0)-router3-router4
-    - node: router5
-      outs:
-      - link(10.0.14.0)-router5-router6
-      - link(10.0.13.0)-router4-router5
-    - node: router6
-      in: link(10.0.14.0)-router5-router6
-      outs:
-      - link(10.0.17.0)-router6-router7
-    - node: router7
-      in: link(10.0.17.0)-router6-router7
-      outs:
-      - link(10.0.18.0)-router7-router8
-    - node: router8
-      in: link(10.0.18.0)-router7-router8
-      outs:
-      - link(10.0.20.0)-router8-sink5
-    - node: sink1
-      in: link(10.0.12.0)-router3-sink1
-    - node: sink5
-      in: link(10.0.20.0)-router8-sink5
-  - group: 225.2.2.5
-    source: noise1
-    routes:
-    - node: dummy1
-      outs:
-      - link(10.0.0.0)-dummy1-router3
-    - node: router2
-      in: link(10.0.10.0)-router2-router3
-      outs:
-      - link(10.0.6.0)-noise1-router2
-    - node: router3
-      in: link(10.0.0.0)-dummy1-router3
-      outs:
-      - link(10.0.10.0)-router2-router3
+      - link(10.0.12.0)-dummy1-router3
 - time: 28.0
-  multicast_routes:
-  - group: 225.1.2.5
-    source: host1
-    routes:
-    - node: relay2
-      in: link(10.0.8.0)-relay2-router3
-    - node: router1
-      in: link(10.0.9.0)-router1-router2
-      outs:
-      - link(10.0.5.0)-host1-router1
-    - node: router2
-      outs:
-      - link(10.0.10.0)-router2-router3
-      - link(10.0.9.0)-router1-router2
-    - node: router3
-      in: link(10.0.10.0)-router2-router3
-      outs:
-      - link(10.0.8.0)-relay2-router3
-- time: 28.1
   multicast_routes: []

@@ -1,9 +1,10 @@
+#include "lib/scenario-loader.h"
 #include "lib/scenario-spec.h"
 
 #include "ns3/core-module.h"
 #include <ns3/command-line.h>
+#include <ns3/simulator.h>
 
-#include <fstream>
 #include <string>
 #include <yaml-cpp/node/node.h>
 #include <yaml-cpp/node/parse.h>
@@ -33,7 +34,11 @@ main(int argc, char* argv[])
     YAML::Node node = YAML::LoadFile(scenarioFile);
     auto spec = node.as<cpt::ScenarioSpec>();
 
-    NS_LOG_INFO("success parse");
+    cpt::ScenarioLoader loader(spec, scenarioFile);
+
+    Simulator::Stop(Seconds(30.0));
+    Simulator::Run();
+    Simulator::Destroy();
 
     return 0;
 }

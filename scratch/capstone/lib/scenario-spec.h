@@ -10,6 +10,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 #include <yaml-cpp/node/node.h>
 
@@ -33,34 +34,38 @@ struct Multicast
     std::string address;
 };
 
-struct Application
-{
-    std::string type;
-    double start;
-    double stop;
-
-    virtual ~Application() = default;
-};
-
-struct OnOff : public Application
+struct OnOffApplication
 {
     std::string node;
     std::string address;
+
+    std::string type;
+    double start;
+    double stop;
 };
 
-struct PacketSink : public Application
+struct PacketSinkApplication
 {
     std::string node;
     std::string address;
     std::optional<std::string> gateway;
+
+    std::string type;
+    double start;
+    double stop;
 };
 
-struct Tunnel : public Application
+struct AmtRelayApplication
 {
-    std::string relay;
-    std::string gateway;
+    std::string type;
+    std::string node;
+};
+
+struct AmtGatewayApplication
+{
+    std::string type;
+    std::string node;
     std::string address;
-    double port;
 };
 
 struct Route
@@ -83,13 +88,16 @@ struct Scenario
     std::vector<MulticastRoute> multicastRoutes;
 };
 
+using Application = std::
+    variant<OnOffApplication, PacketSinkApplication, AmtRelayApplication, AmtGatewayApplication>;
+
 struct ScenarioSpec
 
 {
     std::vector<std::string> nodes;
     std::vector<Link> links;
     std::vector<Multicast> multicasts;
-    std::vector<std::unique_ptr<Application>> applications;
+    std::vector<Application> applications;
     std::vector<Scenario> scenarios;
 };
 
@@ -108,29 +116,31 @@ make_parsed_unique(const YAML::Node& node)
     return app;
 }
 
-std::unique_ptr<Application>
+inline Application
 create_application(const YAML::Node& node)
 {
     auto type = node["type"].as<std::string>();
 
     if (type == "OnOff")
     {
-        return make_parsed_unique<OnOff>(node);
+        return node.as<OnOffApplication>();
     }
     else if (type == "PacketSink")
     {
-        return make_parsed_unique<PacketSink>(node);
+        return node.as<PacketSinkApplication>();
     }
-    else if (type == "Tunnel")
+    else if (type == "AmtRelay")
     {
-        return make_parsed_unique<Tunnel>(node);
+        return node.as<AmtRelayApplication>();
+    }
+    else if (type == "AmtGateway")
+    {
+        return node.as<AmtGatewayApplication>();
     }
     else
     {
         NS_FATAL_ERROR("Unknown application type: " << type << ". Node content: " << node);
     }
-
-    return nullptr;
 }
 
 } // namespace cpt
@@ -140,9 +150,9 @@ namespace YAML
 {
 
 template <>
-struct convert<ns3::cpt::OnOff>
+struct convert<ns3::cpt::OnOffApplication>
 {
-    static bool decode(const Node& node, ns3::cpt::OnOff& rhs)
+    static bool decode(const Node& node, ns3::cpt::OnOffApplication& rhs)
     {
         if (!node["start"] || !node["stop"] || !node["node"] || !node["address"])
         {
@@ -160,10 +170,10 @@ struct convert<ns3::cpt::OnOff>
 };
 
 template <>
-struct convert<ns3::cpt::PacketSink>
+struct convert<ns3::cpt::PacketSinkApplication>
 
 {
-    static bool decode(const Node& node, ns3::cpt::PacketSink& rhs)
+    static bool decode(const Node& node, ns3::cpt::PacketSinkApplication& rhs)
     {
         if (!node["start"] || !node["stop"] || !node["node"] || !node["address"])
         {
@@ -186,23 +196,35 @@ struct convert<ns3::cpt::PacketSink>
 };
 
 template <>
-struct convert<ns3::cpt::Tunnel>
+struct convert<ns3::cpt::AmtRelayApplication>
 {
-    static bool decode(const Node& node, ns3::cpt::Tunnel& rhs)
+    static bool decode(const Node& node, ns3::cpt::AmtRelayApplication& rhs)
     {
-        if (!node["start"] || !node["stop"] || !node["relay"] || !node["gateway"] ||
-            !node["address"] || !node["port"])
+        if (!node["node"])
         {
             return false;
         }
 
-        rhs.type = "Tunnel";
-        rhs.start = node["start"].as<double>();
-        rhs.stop = node["stop"].as<double>();
-        rhs.relay = node["relay"].as<std::string>();
-        rhs.gateway = node["gateway"].as<std::string>();
+        rhs.type = "AmtRelay";
+        rhs.node = node["node"].as<std::string>();
+
+        return true;
+    }
+};
+
+template <>
+struct convert<ns3::cpt::AmtGatewayApplication>
+{
+    static bool decode(const Node& node, ns3::cpt::AmtGatewayApplication& rhs)
+    {
+        if (!node["node"] || !node["address"])
+        {
+            return false;
+        }
+
+        rhs.type = "AmtGateway";
+        rhs.node = node["node"].as<std::string>();
         rhs.address = node["address"].as<std::string>();
-        rhs.port = node["port"].as<double>();
 
         return true;
     }

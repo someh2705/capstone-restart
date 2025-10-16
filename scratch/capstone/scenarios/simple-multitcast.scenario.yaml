@@ -1,0 +1,129 @@
+nodes:
+- host1
+- router1
+- sink1
+- sink2
+- sink3
+links:
+- name: link(10.0.0.0)-host1-router1
+  subnet: 10.0.0.0
+  mask: 255.255.255.0
+  nodes:
+  - host1
+  - router1
+- name: link(10.0.1.0)-router1-sink2
+  subnet: 10.0.1.0
+  mask: 255.255.255.0
+  nodes:
+  - router1
+  - sink2
+- name: link(10.0.2.0)-router1-sink1-sink3
+  subnet: 10.0.2.0
+  mask: 255.255.255.0
+  nodes:
+  - router1
+  - sink1
+  - sink3
+multicasts:
+- name: host
+  address: 225.1.2.4
+applications:
+- type: OnOff
+  node: host1
+  address: host
+  start: 3.0
+  stop: 10
+- type: PacketSink
+  node: sink1
+  address: host
+  start: 2
+  stop: 5
+- type: PacketSink
+  node: sink2
+  address: host
+  start: 4
+  stop: 7
+- type: PacketSink
+  node: sink3
+  address: host
+  start: 6
+  stop: 8
+scenarios:
+- time: 2
+  multicast_routes:
+  - group: 225.1.2.4
+    source: host1
+    routes:
+    - node: host1
+      outs:
+      - link(10.0.0.0)-host1-router1
+    - node: router1
+      in: link(10.0.0.0)-host1-router1
+      outs:
+      - link(10.0.2.0)-router1-sink1-sink3
+    - node: sink1
+      in: link(10.0.2.0)-router1-sink1-sink3
+- time: 4
+  multicast_routes:
+  - group: 225.1.2.4
+    source: host1
+    routes:
+    - node: host1
+      outs:
+      - link(10.0.0.0)-host1-router1
+    - node: router1
+      in: link(10.0.0.0)-host1-router1
+      outs:
+      - link(10.0.1.0)-router1-sink2
+      - link(10.0.2.0)-router1-sink1-sink3
+    - node: sink1
+      in: link(10.0.2.0)-router1-sink1-sink3
+    - node: sink2
+      in: link(10.0.1.0)-router1-sink2
+- time: 5
+  multicast_routes:
+  - group: 225.1.2.4
+    source: host1
+    routes:
+    - node: host1
+      outs:
+      - link(10.0.0.0)-host1-router1
+    - node: router1
+      in: link(10.0.0.0)-host1-router1
+      outs:
+      - link(10.0.1.0)-router1-sink2
+    - node: sink2
+      in: link(10.0.1.0)-router1-sink2
+- time: 6
+  multicast_routes:
+  - group: 225.1.2.4
+    source: host1
+    routes:
+    - node: host1
+      outs:
+      - link(10.0.0.0)-host1-router1
+    - node: router1
+      in: link(10.0.0.0)-host1-router1
+      outs:
+      - link(10.0.1.0)-router1-sink2
+      - link(10.0.2.0)-router1-sink1-sink3
+    - node: sink2
+      in: link(10.0.1.0)-router1-sink2
+    - node: sink3
+      in: link(10.0.2.0)-router1-sink1-sink3
+- time: 7
+  multicast_routes:
+  - group: 225.1.2.4
+    source: host1
+    routes:
+    - node: host1
+      outs:
+      - link(10.0.0.0)-host1-router1
+    - node: router1
+      in: link(10.0.0.0)-host1-router1
+      outs:
+      - link(10.0.2.0)-router1-sink1-sink3
+    - node: sink3
+      in: link(10.0.2.0)-router1-sink1-sink3
+- time: 8
+  multicast_routes: []
