@@ -1,0 +1,48 @@
+# ----------------------------------------------------------
+#
+#                                 gateway1
+#                                    |
+# host1 -> router1 -> router2 -\> router3 -> sink1
+#            |
+#          relay1
+#
+# ----------------------------------------------------------
+
+nodes:
+  explicits:
+    - host1
+    - relay1
+    - gateway1
+    - sink1
+    - router1
+    - router2
+    - router3
+
+multicasts:
+  - name: host
+    address: "225.1.2.5"
+
+firewalls:
+  - node: router2
+    multicast: false
+
+links:
+  - nodes: [host1, router1]
+  - nodes: [router1, relay1]
+  - nodes: [router1, router2]
+  - nodes: [router2, router3]
+  - nodes: [router3, gateway1]
+  - nodes: [router3, sink1]
+
+applications:
+  explicits:
+    - { type: "OnOff", node: host1, address: host, start: 2.0, stop: 30.0 }
+    - { type: "PacketSink", node: sink1, address: host, start: 10.0, stop: 20.0 }
+
+amt:
+  relays:
+    - node: relay1
+
+  gateways:
+    - node: gateway1
+      sinks: [sink1]

@@ -8,6 +8,8 @@ add_library(
   lib/scenario-spec.h
   lib/scenario-loader.h
   lib/scenario-loader.cc
+  lib/amt.h
+  lib/amt.cc
 )
 
 target_include_directories(

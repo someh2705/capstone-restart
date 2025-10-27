@@ -12,10 +12,12 @@ def find_multicast_tree(graph, source, sinks, firewalls, amt_sink_map):
     :param sinks: 현재 활성화된 sink 노드 집합
     :param firewalls: 멀티캐스트가 차단된 노드 이름 집합
     :param amt_sink_map: sink와 gateway, 사용 가능한 relay 목록
-    :return {시작점: {엣지 집합}}
+    :return {시작점: {엣지 집합}}, [(relay, gateway, port, address)]
     """
 
     rooted_tree_edges = defaultdict(set)
+    connected_amts = []
+    port = defaultdict(lambda: 9000)
     multicast_enabled_graph = graph.copy()
     multicast_enabled_graph.remove_nodes_from(firewalls)
 
@@ -32,7 +34,7 @@ def find_multicast_tree(graph, source, sinks, firewalls, amt_sink_map):
             gateway, available_relays = amt_sink_map[sink]
 
             best_relay = None
-            shortest_path_len = float('inf')
+            shortest_path_len = float("inf")
 
             for relay in available_relays:
                 try:
@@ -46,25 +48,34 @@ def find_multicast_tree(graph, source, sinks, firewalls, amt_sink_map):
                     continue
 
             if not best_relay:
-                raise nx.NetworkXAlgorithmError(f"Warning: No path from source '{source}' to any available relays for sink '{sink}'.")
-
+                raise nx.NetworkXAlgorithmError(
+                    f"Warning: No path from source '{source}' to any available relays for sink '{sink}'."
+                )
 
             path_to_relay = nx.shortest_path(
                 multicast_enabled_graph, source=source, target=best_relay
             )
 
             for i in range(len(path_to_relay) - 1):
-                rooted_tree_edges[source].add( tuple(sorted((path_to_relay[i], path_to_relay[i + 1]))))
+                rooted_tree_edges[source].add(
+                    tuple(sorted((path_to_relay[i], path_to_relay[i + 1])))
+                )
 
             path_from_gateway = nx.shortest_path(
                 multicast_enabled_graph, source=gateway, target=sink
             )
+
             for i in range(len(path_from_gateway) - 1):
                 rooted_tree_edges[gateway].add(
                     tuple(sorted((path_from_gateway[i], path_from_gateway[i + 1])))
                 )
 
-    return rooted_tree_edges
+            connected_key = (best_relay, gateway)
+            connected_port = port[connected_key]
+            port[connected_key] += 1
+            connected_amts.append((best_relay, gateway, connected_port, source))
+
+    return rooted_tree_edges, connected_amts
 
 
 def convert_edges_to_routes(root, tree_edges, links):
@@ -268,19 +279,6 @@ class ScenarioGenerator:
                 events[app["start"]].append(("join", app["node"], group_name))
                 events[app["stop"]].append(("leave", app["node"], group_name))
 
-        if "amt" in self.meta:
-            for relay_node in self.amt_config["relays"]:
-                base_apps.append({"type": "AmtRelay", "node": relay_node})
-
-            for gw_info in self.meta["amt"].get("gateways", []):
-                base_apps.append(
-                    {
-                        "type": "AmtGateway",
-                        "node": gw_info["node"],
-                        "address": gw_info["address"],
-                    }
-                )
-
         scenario_steps = []
         sorted_times = sorted(events.keys())
         active_sinks = defaultdict(set)
@@ -305,13 +303,24 @@ class ScenarioGenerator:
                 if not source_node:
                     continue
 
-                rooted_tree_edges = find_multicast_tree(
+                rooted_tree_edges, connected_amts = find_multicast_tree(
                     self.graph,
                     source_node,
                     sinks,
                     self.firewalls,
                     self.amt_config.get("sink_map", {}).get(group, {}),
                 )
+
+                for relay, gateway, port in connected_amts:
+                    base_apps.append(
+                        {
+                            "type": "AMT",
+                            "relay": relay,
+                            "gateway": gateway,
+                            "port": port,
+                            "address": group,
+                        }
+                    )
 
                 combined_routes = {}
                 for root, edges in rooted_tree_edges.items():

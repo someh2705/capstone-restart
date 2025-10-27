@@ -1,0 +1,91 @@
+nodes:
+- gateway1
+- host1
+- relay1
+- router1
+- router2
+- router3
+- sink1
+links:
+- name: link(10.0.0.0)-host1-router1
+  subnet: 10.0.0.0
+  mask: 255.255.255.0
+  nodes:
+  - host1
+  - router1
+- name: link(10.0.1.0)-relay1-router1
+  subnet: 10.0.1.0
+  mask: 255.255.255.0
+  nodes:
+  - router1
+  - relay1
+- name: link(10.0.2.0)-router1-router2
+  subnet: 10.0.2.0
+  mask: 255.255.255.0
+  nodes:
+  - router1
+  - router2
+- name: link(10.0.3.0)-router2-router3
+  subnet: 10.0.3.0
+  mask: 255.255.255.0
+  nodes:
+  - router2
+  - router3
+- name: link(10.0.4.0)-gateway1-router3
+  subnet: 10.0.4.0
+  mask: 255.255.255.0
+  nodes:
+  - router3
+  - gateway1
+- name: link(10.0.5.0)-router3-sink1
+  subnet: 10.0.5.0
+  mask: 255.255.255.0
+  nodes:
+  - router3
+  - sink1
+multicasts:
+- name: host
+  address: 225.1.2.5
+applications:
+- type: OnOff
+  node: host1
+  address: host
+  start: 2.0
+  stop: 30.0
+- type: PacketSink
+  node: sink1
+  address: host
+  start: 10.0
+  stop: 20.0
+- type: AMT
+  relay: relay1
+  gateway: gateway1
+  port: 9000
+  address: host
+
+scenarios:
+- time: 10.0
+  multicast_routes:
+  - group: 225.1.2.5
+    source: host1
+    routes:
+    - node: gateway1
+      outs:
+      - link(10.0.4.0)-gateway1-router3
+    - node: host1
+      outs:
+      - link(10.0.0.0)-host1-router1
+    - node: relay1
+      in: link(10.0.1.0)-relay1-router1
+    - node: router1
+      in: link(10.0.0.0)-host1-router1
+      outs:
+      - link(10.0.1.0)-relay1-router1
+    - node: router3
+      in: link(10.0.4.0)-gateway1-router3
+      outs:
+      - link(10.0.5.0)-router3-sink1
+    - node: sink1
+      in: link(10.0.5.0)-router3-sink1
+- time: 20.0
+  multicast_routes: []
