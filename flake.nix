@@ -13,11 +13,11 @@
         pkgs = import nixpkgs { inherit system; };
         unstable = import nixpkgs-unstable { inherit system; };
 
-        dependencies = with pkgs; [
+        dependencies = with unstable; [
           ns-3
         ];
 
-        buildTools = with pkgs; [
+        buildTools = with unstable; [
           gcc
 
           cmake
@@ -40,12 +40,15 @@
           gemini-cli
         ];
 
-        python = pkgs.python3.withPackages (ps: with ps; [
+        python = unstable.python3.withPackages (ps: with ps; [
           numpy
           pandas
           matplotlib
           pyyaml
           networkx
+          addict
+          icecream
+
           python-lsp-server
           python-lsp-ruff
         ]);
@@ -55,6 +58,10 @@
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = buildTools ++ devTools;
           buildInputs = [ python ] ++ dependencies;
+
+          shellHook = ''
+            export PYTHONPATH=$PYTHONPATH:${python}/${python.sitePackages}
+          '';
         };
       });
 }

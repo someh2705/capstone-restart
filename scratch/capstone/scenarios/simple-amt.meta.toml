@@ -1,0 +1,52 @@
+start = 1.0
+stop = 30.0
+
+[node]
+  explicits = [
+    "host1", "relay1", "gateway1", "sink1"
+  ]
+
+[[node.patterns]]
+  prefix = "router"
+  count = 3
+
+[[multicasts]]
+  name = "host-group"
+  address = "225.1.2.5"
+
+[link]
+paths = [
+  "host1 - router1 - router2 -- router3 - sink1",
+  "router1 - relay1",
+  "router3 - gateway1"
+]
+
+[[applications]]
+  name = "host-app"
+  type = "OnOff"
+  node = "host1"
+  address = "host-group"
+  start = 2.0
+  stop = 25.0
+  rate = "1KiB/s"
+  size = 1024
+
+[[applications]]
+  name = "sink1-app"
+  type = "PacketSink"
+  node = "sink1"
+  address = "host-group"
+  start = 10.0
+  stop = 20.0
+
+[[amt.relays]]
+  name = "relay1-amt"
+  node = "relay1"
+
+[[amt.gateways]]
+  name = "gateway1-amt"
+  node = "gateway1"
+  sinks = ["sink1"]
+
+
+

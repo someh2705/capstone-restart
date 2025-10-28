@@ -11,13 +11,13 @@ links:
   nodes:
   - host1
   - router1
-- name: link(10.0.1.0)-router1-sink2
+- name: link(10.0.1.0)
   subnet: 10.0.1.0
   mask: 255.255.255.0
   nodes:
   - router1
   - sink2
-- name: link(10.0.2.0)-router1-sink1-sink3
+- name: link(10.0.2.0)
   subnet: 10.0.2.0
   mask: 255.255.255.0
   nodes:
@@ -51,18 +51,17 @@ applications:
 scenarios:
 - time: 2
   multicast_routes:
-  - group: 225.1.2.4
-    source: host1
+  - group: host-group
     routes:
     - node: host1
       outs:
-      - link(10.0.0.0)-host1-router1
+      - 10.0.0.0
     - node: router1
-      in: link(10.0.0.0)-host1-router1
+      in: 10.0.0.0
       outs:
-      - link(10.0.2.0)-router1-sink1-sink3
+      - 10.0.2.0
     - node: sink1
-      in: link(10.0.2.0)-router1-sink1-sink3
+      in: 10.0.2.0
 - time: 4
   multicast_routes:
   - group: 225.1.2.4
