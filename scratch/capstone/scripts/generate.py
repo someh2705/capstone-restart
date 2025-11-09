@@ -1,6 +1,7 @@
 import argparse
 import yaml
 import re
+from collections import defaultdict
 import tomllib
 import addict
 import networkx as nx
@@ -18,8 +19,8 @@ class ScenarioGenerator:
         self.multicasts = self._parse_multicasts()
         self.links = self._parse_link_paths()
         self.graph = self._build_graph()
-        self.relays = self._parse_amt_relays()
-        self.gateways = self._parse_amt_gateways()
+        self.relay_nodes = self._parse_amt_relays()
+        self.gateway_nodes = self._parse_amt_gateways()
         self.applications = self._parse_applications()
 
         ic(self.links)
@@ -83,25 +84,26 @@ class ScenarioGenerator:
         return G
 
     def _parse_amt_relays(self):
-        relays = {}
-        for relay in self.config.amt.relays:
-            assert relay.name not in relays, f"Duplicated relay: '{relay.name}'"
-            relays[relay.name] = relay
+        relay_nodes = []
+        for relay_node in self.config.amt.relays:
+            assert relay_node not in relay_nodes, (
+                f"Duplicated relay: '{relay_node}'"
+            )
+            relay_nodes.append(relay_node)
 
-        return relays
+        return relay_nodes
 
     def _parse_amt_gateways(self):
-        gateways = {}
-        checked_sinks = set()
-        for gateway in self.config.amt.gateways:
-            assert gateway.name not in gateways, f"Duplicated gateway: '{gateway.name}'"
-            gateways[gateway.name] = gateway
+        gateway_configs = []
+        checked_nodes = []
+        for gateway_node in self.config.amt.gateways:
+            assert gateway_node.node not in checked_nodes, (
+                f"Duplicated gateway: '{gateway_node}'"
+            )
+            gateway_configs.append(gateway_node)
+            checked_nodes.append(gateway_node.node)
 
-            for sink in gateway.sink:
-                assert sink not in checked_sinks, f"Duplicated sink: '{sink}'"
-                checked_sinks.add(sink)
-
-        return gateways
+        return gateway_configs
 
     def _parse_applications(self):
         applications = {}
@@ -124,7 +126,16 @@ class ScenarioGenerator:
 
         self._generate_nodes(generated)
         self._generate_links(generated)
-        self._generate_scenarios(generated)
+        processor = ScenarioProcessor(
+            self.config,
+            self.nodes,
+            self.graph,
+            self.applications,
+            self.multicasts,
+            self.relay_apps,
+            self.gateway_apps,
+        )
+        processor.generate_scenarios(generated)
 
         return generated.to_dict()
 
@@ -138,163 +149,139 @@ class ScenarioGenerator:
             for u, v, d in self.links
         ]
 
-    def _generate_scenarios(self, generated):
-        events = self._events()
-        routing = self._routing(events)
-
-        generated.scenarios = []
-
-        for time in events:
-            scenario = addict.Dict()
-            scenario.time = time
-
-            multicast_routes = []
-            for multicast_route in multicast_routes:
-                route = addict.Dict(multicast_route)
-
-                multicast_routes.append(
-                    {"group": route.group, "address": route.address}
-                )
-
-            actions = []
-            for name, app in self.applications.items():
-                if app.start == time:
-                    actions.append({"start": app.to_dict()})
-                if app.stop == time:
-                    actions.append({"stop": app.to_dict()})
-
-            scenario.multicast_routes = multicast_routes
-            scenario.actions = actions
-            generated.scenarios.append(scenario.to_dict())
-
-    def _events(self):
-        events = set([self.config.start, self.config.stop])
-
-        for app in self.config.applications:
-            events.add(app.start)
-            events.add(app.stop)
-
-        return sorted(events)
-
-    def _scenario(self, generated):
-        generated.scenarios = []
-        events = self._events()
-
-        for time in events:
-            scenario = addict.Dict()
-            running_apps = []
-            for _, app in self.applications.items():
-                if time >= app.start and time < app.stop:
-                    running_apps.append(app)
-
-            actions, multicast_routes = self._scenario_impl(time, running_apps)
-
-            scenario.time = time
-            scenario.actions = actions
-            scenario.multicast_routes = multicast_routes
-
-            generated.scenarios.append(scenario.to_dict())
-
-    def _scenario_impl(self, time, running_apps):
-        actions = []
-        multicast_routes = []
-
-        for name, app in self.applications.items():
-            if app.start == time:
-                actions.append({"start": app.to_dict()})
-            if app.stop == time:
-                actions.append({"stop": app.to_dict()})
-
-        sources = {}
-        targets = {}
-
-        for app in running_apps:
-            if app.type == "OnOff":
-                sources[app.address] = app
-
-            elif app.type == "PacketSink":
-                targets[app.address] = app
-
-            else:
-                assert True, f"not support type '{app.type}'"
-
-        for address, app in targets.items():
-            multicast_address = self.multicasts[address].address
-            multicast_graph = self._multicast_graph()
-            target = app.node
-            source = sources[address].node
-
-            try:
-                path = nx.shortest_path(multicast_graph, source=source, target=target)
-
-                multicast_routes.append(
-                    {"group": address, "address": multicast_address, "routes": [path]}
-                )
-            except nx.NetworkXNoPath:
-                gateway = self._find_gateway_node(target)
-
-                best_relay = None
-                best_relay_length = float("inf")
-                for name, relay in self.relays.items():
-                    try:
-                        length = nx.shortest_path_length(
-                            self.graph, source=relay.node, target=gateway
-                        )
-
-                        if best_relay_length > length:
-                            best_relay = relay.node
-                            best_relay_length = length
-                    except nx.NetworkXNoPath:
-                        continue
-
-                relay_path = nx.shortest_path(
-                    multicast_graph, source=source, target=best_relay
-                )
-
-                gateway_path = nx.shortest_path(
-                    multicast_graph, source=gateway, target=target
-                )
-
-                multicast_routes.append(
-                    {
-                        "group": address,
-                        "address": multicast_address,
-                        "routes": [relay_path, gateway_path],
-                    }
-                )
-
-        return multicast_routes
-
-    def _create_multicast_route_entry(self, multicast_routes):
-        route_entry = []
-
-        for multicast_route in multicast_routes:
-            path = multicast_route["routes"]
-            ic(path)
-            for i in range(len(path) - 2):
-                route_entry.append((path[i], path[i - 1]))
-        ic(route_entry)
-
-        return route_entry
-
-    def _create_application_actions(self, time):
-        pass
 
     def _find_link(self, u, v):
         return self.graph[u][v]["subnet"]
 
-    def _multicast_graph(self):
+class ScenarioProcessor:
+    def __init__(
+        self, config, nodes, graph, applications, multicasts, relay_apps, gateway_apps
+    ):
+        self.config = config
+        self.nodes = nodes
+        self.graph = graph
+        self.applications = applications
+        self.multicasts = multicasts
+        self.relay_apps = relay_apps
+        self.gateway_apps = gateway_apps
+
+    def _build_multicast_graph(self):
         def is_multicast_enabled(u, v):
             return self.graph[u][v]["multicast"]
 
         return nx.subgraph_view(self.graph, filter_edge=is_multicast_enabled)
 
-    def _find_gateway_node(self, target):
-        for _, gateway in self.gateways.items():
-            if target in gateway.sinks:
-                return gateway.node
+    def _get_event_timeline(self):
+        events = set([self.config.start, self.config.stop])
 
-        assert True, f"Not found gateway: '{target}'"
+        for app in self.applications.values():
+            events.add(app.start)
+            events.add(app.stop)
+
+        return sorted(list(events))
+
+    def generate_scenarios(self, generated):
+        timeline = self._get_event_timeline()
+        scenarios = []
+
+        connected_port = 10888
+        running_hosts = []
+        running_sinks = []
+        running_tunnel = []
+
+        for time in timeline:
+            scenario = addict.Dict()
+            should_connect_sink = []
+            actions = []
+
+            for name, app in self.applications.items():
+                if app.start == time:
+                    if app.type == "PacketSink":
+                        should_connect_sink.append((name, app))
+                        running_sinks.append((name, app))
+                    if app.type == "OnOff":
+                        running_hosts.append((name, app))
+
+                if app.stop == time:
+                    if app.type == "PacketSink":
+                        running_sinks.remove((name, app))
+
+                    if app.type == "OnOff":
+                        running_hosts.remove((name, app))
+
+            multicast_paths = defaultdict(list)
+            for name, app in should_connect_sink:
+                multicast_graph = self._build_multicast_graph()
+
+                target = app.node
+                sources = []
+
+                for name, host in running_hosts:
+                    if host.address == app.address:
+                        sources.append(host)
+                else:
+                    assert len(sources) != 0, (
+                        f"Not found source application: '{target}'"
+                    )
+
+                source = self._find_closest_node([s.node for s in sources], target)
+
+                try:
+                    path = nx.shortest_path(
+                        multicast_graph, source=source, target=target
+                    )
+                    multicast_paths[app.address].append(path)
+                    ic(path)
+                except nx.NetworkXNoPath:
+                    # 만약 현재 실행중인 gateway로 multicast를 받을 수 있으면 검색 필요 없음.
+                    for relay_app, gateway_app, _ in running_tunnel:
+                        if target in gateway_app.sinks:
+                            if app.address == relay_app.address:
+                                continue
+
+                    gateway = next(.node for node, _ in self.gateway_apps.items())
+                    relay = self._find_closest_node(
+                        [r.node for _, r in self.relays.items()], target
+                    )
+
+                    relay_path = nx.shortest_path(
+                        multicast_graph, source=source, target=relay
+                    )
+                    gateway_path = nx.shortest_path(
+                        multicast_graph, source=gateway, target=target
+                    )
+
+                    multicast_paths[app.address].append(relay_path)
+                    multicast_paths[app.address].append(gateway_path)
+
+                    relay_app = next(r for r in self.relays if r.node == relay)
+                    gateway_app = next(g for g in self.gateways if g.node == gateway)
+
+                    running_tunnel.append((relay, gateway, connected_port))
+                    connected_port += 1
+
+            scenarios.append(scenario.to_dict())
+
+        ic(scenarios)
+
+    def _find_closest_node(self, candidate_nodes, destination_node):
+        best_node = None
+        best_length = float("inf")
+
+        for node in candidate_nodes:
+            try:
+                length = nx.shortest_path_length(
+                    self.graph, source=node, target=destination_node
+                )
+
+                if best_length > length:
+                    best_node = node
+                    best_length = length
+
+            except nx.NetworkXNoPath:
+                continue
+
+        return best_node
 
 
 def main(meta, output):

@@ -39,14 +39,8 @@ paths = [
   start = 10.0
   stop = 20.0
 
-[[amt.relays]]
-  name = "relay1-amt"
-  node = "relay1"
-
-[[amt.gateways]]
-  name = "gateway1-amt"
-  node = "gateway1"
-  sinks = ["sink1"]
-
+[amt]
+  relays = ["relay1"]
+  gateways = ["gateway1"]
 
 

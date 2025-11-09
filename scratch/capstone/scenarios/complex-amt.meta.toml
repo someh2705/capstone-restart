@@ -1,0 +1,115 @@
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+#
+#
+#
+#  relay1    relay2    relay3              gateway1            gateway2                                            gateway3                gateway4
+#    |         |         ||                   |                  ||                                                   |                      |
+# router1 - router2 - router3 - router4 -- router5 - router6 - router7 - router8 - router9 - router10 - router11 - router12 -- router13 - router14
+#    |                            |                              |                                        |                      |
+#  host1                         sink1                         sink2                                    sink3                  sink4
+#
+#
+# - sink1은 multicast 가능한 네트워크
+# - sink2는 multicast 불가능한 네트워크
+#   가장 가까운건 gateway2이지만 gateway2가 router6로 multicast 불가능이므로 가장 가까운 gateway1이 선택 돼야 함
+#   relay3은 host1과 multicast 불가능하므로 gateway1은 relay2를 선택
+#
+# - sink3은 multicast 불가능한 네트워크
+#   하지만 sink2에서 연결된 gateway2-relay2 이 유지되고 있으므로 터널을 연결하지 않음.
+#
+# - sink4는 multicast 불가능한 네트워크
+#   gateway2-relay3도 수신 불가능 하므로 gateway4-relay2를 선택하게 됨.
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+
+start = 0.0
+stop = 30.0
+
+[node]
+  explicits = ["host1"]
+
+[[node.patterns]]
+  prefix = "router"
+  count = 14
+
+[[node.patterns]]
+  prefix = "sink"
+  count = 4
+
+[[node.patterns]]
+  prefix = "relay"
+  count = 3
+
+[[node.patterns]]
+  prefix = "gateway"
+  count = 4
+
+[[multicasts]]
+  name = "host-group"
+  address = "225.1.2.5"
+
+[link]
+  paths = [
+    "router1 - router2 - router3 - router4 -- router5 - router6 - router7 - router8 - router9 - router10 - router11 - router12 -- router13 - router14",
+    "host1 - router1",
+    "router1 - relay1",
+    "router2 - relay2",
+    "router3 -- relay3",
+    "router4 - sink1",
+    "router5 - gateway1",
+    "router7 - sink2",
+    "router7 -- gateway2",
+    "router11 - sink3",
+    "router12 - gateway3",
+    "router13 - sink4",
+    "router14 - gateway4"
+  ]
+
+[[applications]]
+  name = "host-app"
+  type = "OnOff"
+  node = "host1"
+  address = "host-group"
+  start = 2.0
+  stop = 25.0
+  rate = "1KiB/s"
+  size = 1024
+
+[[applications]]
+  name = "sink1-app"
+  type = "PacketSink"
+  node = "sink1"
+  address = "host-group"
+  start = 11.0
+  stop = 21.0
+
+
+[[applications]]
+  name = "sink2-app"
+  type = "PacketSink"
+  node = "sink2"
+  address = "host-group"
+  start = 12.0
+  stop = 22.0
+
+
+[[applications]]
+  name = "sink3-app"
+  type = "PacketSink"
+  node = "sink3"
+  address = "host-group"
+  start = 13.0
+  stop = 23.0
+
+
+[[applications]]
+  name = "sink4-app"
+  type = "PacketSink"
+  node = "sink4"
+  address = "host-group"
+  start = 14.0
+  stop = 24.0
+
+[amt]
+  relays = ["relay1", "relay2", "relay3"]
+  gateways = ["gateway1", "gateway2", "gateway3", "gateway4"]
